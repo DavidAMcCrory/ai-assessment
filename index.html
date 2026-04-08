@@ -243,6 +243,9 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 .lr-cond li{padding:6px 0;font-size:13px;color:var(--t2);list-style:none;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--brd)}
 .lr-cond li:last-child{border-bottom:none}
 
+/* TRUSTLAYER — hidden from public view */
+.tl-sec{display:none!important}
+
 /* TRUSTLAYER */
 .tl-card{background:var(--s1);border:1px solid var(--brd);border-left:3px solid var(--accent);border-radius:0 var(--r2) var(--r2) 0;padding:18px 20px;margin-bottom:10px}
 .tl-card h4{font-family:'Instrument Serif',Georgia,serif;font-size:16px;font-weight:400;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--t1)}
@@ -1438,7 +1441,7 @@ function renderRpt() {
     </div>
 
     <!-- ===== TRUSTLAYER INTEGRATION ===== -->
-    <div class="rsec"><h3>TrustLayer Integration Narrative</h3>
+    <div class="rsec tl-sec"><h3>TrustLayer Integration Narrative</h3>
       <div class="info-box" style="margin-bottom:16px">
         Use these findings to structure the TrustLayer demo around the client's specific risk profile. Each gap maps directly to a TrustLayer capability — this creates a natural handoff from assessment to product demonstration.
       </div>
