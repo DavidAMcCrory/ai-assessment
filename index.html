@@ -250,6 +250,10 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 .tl-feature{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:2px;background:var(--accent-pale);border:1px solid rgba(26,58,42,.18);color:var(--accent-l);font-size:10px;font-weight:500;margin:2px;letter-spacing:.02em}
 .tl-scenario{background:var(--bg);border:1px solid var(--brd);border-radius:2px;padding:10px 12px;font-size:11px;color:var(--t2);margin-top:8px;border-left:2px solid var(--accent-l);line-height:1.6}
 
+/* WATERMARK */
+.rpt-watermark{text-align:center;padding:32px 0 8px;font-size:11px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase}
+.rpt-watermark span{display:inline-block;padding:4px 14px;border:1px solid var(--brd);border-radius:2px;background:var(--s1)}
+
 /* MISC */
 .divider{height:1px;background:var(--brd);margin:24px 0}
 .hidden{display:none!important}
@@ -1188,6 +1192,7 @@ function renderRpt() {
       }).join('')}
       ${hi.concat(md).length===0?'<div class="tl-card"><h4>Strong Governance Posture Demonstrated</h4><p>Position TrustLayer as the platform that operationalizes and continuously validates the governance controls already in place. Emphasize real-time monitoring, board reporting, and audit readiness as ongoing capabilities rather than remediation tools.</p><div style="margin-top:8px"><span class="tl-feature">Continuous Monitoring</span><span class="tl-feature">Board Reporting</span><span class="tl-feature">Audit Readiness</span><span class="tl-feature">ISO 42001 Alignment</span></div></div>':''}
     </div>
+    <div class="rpt-watermark"><span>Built by David McCrory</span></div>
   `;
 
   setupReveal(document.getElementById('rptContent'));
