@@ -333,12 +333,15 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
         <div class="hdr-sub">Regulated Industries · Multi-Jurisdiction</div>
       </div>
     </div>
-    <div class="steps">
-      <div class="step-d" id="sd1">1</div>
-      <div class="step-l" id="sl1"></div>
-      <div class="step-d" id="sd2">2</div>
-      <div class="step-l" id="sl2"></div>
-      <div class="step-d" id="sd3">3</div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="steps">
+        <div class="step-d" id="sd1">1</div>
+        <div class="step-l" id="sl1"></div>
+        <div class="step-d" id="sd2">2</div>
+        <div class="step-l" id="sl2"></div>
+        <div class="step-d" id="sd3">3</div>
+      </div>
+      <button id="resetBtn" onclick="resetState()" style="display:none;font-size:11px;padding:5px 11px;border:1px solid var(--brd);border-radius:2px;background:var(--s1);color:var(--t3);cursor:pointer;font-family:inherit;transition:color .15s,border-color .15s" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='var(--t3)';this.style.borderColor='var(--brd)'">↺ Start Over</button>
     </div>
   </div>
 </header>
@@ -906,7 +909,48 @@ const TL_MAP = {
 // ============================================================
 //  STATE
 // ============================================================
-let S = { scr:{}, scrScore:0, scrTier:'', ans:{}, stage:1, aDom:0, vertical:'general', totalQ:0, domainQCounts:{} };
+let S = { scr:{}, scrScore:0, scrTier:'', ans:{}, stage:0, aDom:0, vertical:'general', totalQ:0, domainQCounts:{} };
+
+// ============================================================
+//  SESSION PERSISTENCE
+// ============================================================
+const SS_KEY = 'aiAssess_v1';
+
+function saveState() {
+  if(S.stage >= 2) sessionStorage.setItem(SS_KEY, JSON.stringify(S));
+}
+
+function resetState() {
+  if(!confirm('Clear your current session and start over?')) return;
+  sessionStorage.removeItem(SS_KEY);
+  S = { scr:{}, scrScore:0, scrTier:'', ans:{}, stage:0, aDom:0, vertical:'general', totalQ:0, domainQCounts:{} };
+  document.getElementById('resetBtn').style.display = 'none';
+  go(0);
+}
+
+function restoreState() {
+  try {
+    const saved = sessionStorage.getItem(SS_KEY);
+    if(!saved) return;
+    S = JSON.parse(saved);
+    if(S.stage < 2) return;
+    document.getElementById('resetBtn').style.display = '';
+    // Rebuild stage 2 structure (needed for both stage 2 and 3 restore)
+    buildDeep();
+    if(S.stage === 3) renderRpt();
+    // Navigate to saved stage without triggering buildDeep again
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+    document.getElementById('v' + S.stage).classList.add('on');
+    for(let i=1;i<=3;i++){
+      const d=document.getElementById('sd'+i); d.classList.remove('on','done');
+      if(i<S.stage) d.classList.add('done'); else if(i===S.stage) d.classList.add('on');
+    }
+    document.getElementById('sl1').classList.toggle('on', S.stage>=2);
+    document.getElementById('sl2').classList.toggle('on', S.stage>=3);
+  } catch(e) {
+    sessionStorage.removeItem(SS_KEY);
+  }
+}
 
 // ============================================================
 //  INTERACTION
@@ -1039,7 +1083,9 @@ function go(n) {
   }
   document.getElementById('sl1').classList.toggle('on',n>=2);
   document.getElementById('sl2').classList.toggle('on',n>=3);
+  document.getElementById('resetBtn').style.display = n>=2 ? '' : 'none';
   if(n===2)buildDeep();
+  saveState();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1076,17 +1122,20 @@ function buildDeep() {
           const isVert = (q.regs||[]).some(r=>r.startsWith('⬡'));
           const regsClean = (q.regs||[]).filter(r=>!r.startsWith('⬡'));
           const helpKey = isVert ? `${S.vertical}_${d.id}` : `${d.id}_${qi}`;
+          const clsMap = {0:'sel0', 0.5:'sel05', 1:'sel1', 1.5:'sel15', 2:'sel2'};
+          const saved = S.ans[`${d.id}_${qi}`];
+          const sc = v => (saved===v ? 'abtn5 '+(clsMap[v]||'') : 'abtn5');
           return `
           <div class="qc" ${isVert?'style="border-left:2px solid #a78bfa"':''}>
             ${isVert?`<div class="vertical-tag">⬡ ${vNames[S.vertical]||'Profile'} — Supplemental Question</div>`:''}
             <div class="qt">${q.text}<button class="help-btn" onclick="showHelp(event,'${helpKey}')" title="Guidance &amp; examples">?</button></div>
             <div class="qr">${regsClean.map(r=>`<span>${r}</span>`).join('')}</div>
             <div class="arow5">
-              <button class="abtn5" onclick="ans('${d.id}',${qi},0,this)"><span class="av">✓</span><span class="al">Compliant</span></button>
-              <button class="abtn5" onclick="ans('${d.id}',${qi},0.5,this)"><span class="av">~</span><span class="al">Largely</span></button>
-              <button class="abtn5" onclick="ans('${d.id}',${qi},1,this)"><span class="av">△</span><span class="al">Partial</span></button>
-              <button class="abtn5" onclick="ans('${d.id}',${qi},1.5,this)"><span class="av">!</span><span class="al">Gap</span></button>
-              <button class="abtn5" onclick="ans('${d.id}',${qi},2,this)"><span class="av">✗</span><span class="al">Non-Compl.</span></button>
+              <button class="${sc(0)}" onclick="ans('${d.id}',${qi},0,this)"><span class="av">✓</span><span class="al">Compliant</span></button>
+              <button class="${sc(0.5)}" onclick="ans('${d.id}',${qi},0.5,this)"><span class="av">~</span><span class="al">Largely</span></button>
+              <button class="${sc(1)}" onclick="ans('${d.id}',${qi},1,this)"><span class="av">△</span><span class="al">Partial</span></button>
+              <button class="${sc(1.5)}" onclick="ans('${d.id}',${qi},1.5,this)"><span class="av">!</span><span class="al">Gap</span></button>
+              <button class="${sc(2)}" onclick="ans('${d.id}',${qi},2,this)"><span class="av">✗</span><span class="al">Non-Compl.</span></button>
             </div>
           </div>`;
         }).join('')}
@@ -1154,6 +1203,7 @@ function ans(did, qi, v, btn) {
   const clsMap = {0:'sel0', 0.5:'sel05', 1:'sel1', 1.5:'sel15', 2:'sel2'};
   btn.classList.add(clsMap[v] || 'sel0');
   updProg();
+  saveState();
 }
 
 function updProg() {
@@ -1561,8 +1611,8 @@ function setupReveal(root) {
   });
 }
 setupReveal();
-
 updProg();
+restoreState();
 </script>
 </body>
 </html>
