@@ -1527,7 +1527,7 @@ function renderRpt() {
     <!-- ===== TRUSTLAYER INTEGRATION ===== -->
     <div class="rsec tl-sec"><h3>TrustLayer Integration Narrative</h3>
       <div class="info-box" style="margin-bottom:16px">
-        Use these findings to structure the TrustLayer demo around the client's specific risk profile. Each gap maps directly to a TrustLayer capability — this creates a natural handoff from assessment to product demonstration.
+        Use these findings to structure the TrustLayer demo around the selected sample risk profile. Each gap maps to an illustrative TrustLayer capability - this creates a natural handoff from assessment to product demonstration.
       </div>
       ${hi.concat(md).slice(0,4).map(d=>{
         const tl=TL_MAP[d.id]||{feature:'Governance Module',scenario:'Demo TrustLayer governance controls.',capabilities:[]};
