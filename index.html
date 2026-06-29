@@ -595,7 +595,7 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
   <div class="brow" style="justify-content:center;margin-top:28px">
     <button class="btn btn-g" onclick="go(2)">← Back to Assessment</button>
     <button class="btn btn-o" onclick="exportRpt()">📄 Export Report</button>
-    <button class="btn btn-p" onclick="window.print()">🖨 Print / Save PDF</button>
+    <button class="btn btn-p" onclick="track('print_report');window.print()">🖨 Print / Save PDF</button>
   </div>
   <div class="fine-print">
     Assessment methodology: iTechLaw RAIIA, NIST AI RMF 1.0, ISO/IEC 42001:2023, OSFI EDGE Principles, OECD AI Policy Framework,<br>
@@ -608,6 +608,16 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 
 <script>
 document.getElementById('cpyr').textContent = new Date().getFullYear();
+
+// ============================================================
+//  ANALYTICS — lightweight GA4 funnel events
+//  No-op if gtag is blocked (ad/tracker blockers) or absent, so
+//  it never throws in the main flow. Stage events are deduped via
+//  S.reached so back-navigation does not inflate counts.
+// ============================================================
+function track(name, params) {
+  try { if (typeof gtag === 'function') gtag('event', name, params || {}); } catch (e) {}
+}
 
 // ============================================================
 //  DOMAINS
@@ -1070,6 +1080,7 @@ function runScreener() {
   if(vertical!=='general') factors.push({i:'🔵',c:'var(--blue)',t:`Assessment profile: ${vName} — profile-specific questions will be added to Stage 2`});
 
   const needsDeep = pct > 20;
+  track('run_screener',{screening_tier:tier,needs_deep:needsDeep,profile:vertical});
   const el = document.getElementById('screenerResult');
   el.classList.remove('hidden');
   el.innerHTML = `
@@ -1121,6 +1132,14 @@ function go(n) {
   document.getElementById('sl2').classList.toggle('on',n>=3);
   document.getElementById('resetBtn').style.display = n>=2 ? '' : 'none';
   if(n===2)buildDeep();
+  // Funnel: fire once the first time each stage is reached this session
+  S.reached = S.reached || {};
+  if(!S.reached[n]){
+    S.reached[n] = true;
+    if(n===1) track('begin_assessment');
+    else if(n===2) track('start_deep_assessment',{screening_tier:S.scrTier||'n/a'});
+    else if(n===3) track('complete_report',{screening_tier:S.scrTier||'n/a'});
+  }
   saveState();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1595,6 +1614,7 @@ function renderCharts() {
 //  EXPORT
 // ============================================================
 function exportRpt() {
+  track('export_report',{screening_tier:S.scrTier||'n/a'});
   const instNames={bank:'Bank / Deposit-Taking Institution',insurer:'Insurer',trust:'Trust & Loan',wealth:'Wealth Manager',credit:'Credit Union',fintech:'Fintech'};
   const vNames={general:'General / Cross-Industry',genai:'Generative AI / LLM System',creditlending:'Credit & Lending AI',insurance:'Insurance Underwriting AI',trading:'Algorithmic Trading AI',healthcare:'Healthcare / Clinical AI'};
   const ds={};
